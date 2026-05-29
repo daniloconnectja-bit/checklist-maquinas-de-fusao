@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Checklist Máquinas de Fusão — Connect Já</title>
+<style>
+  :root {
+    --blue:#1565C0;
+    --blue2:#1055A8;
+    --blue3:#0d47a1;
+    --yellow:#F9B42D;
+    --text:#fff;
+    --ok:#2ecc71;
+    --div:#e74c3c;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',sans-serif;background:var(--blue);color:var(--text);min-height:100vh}
+
+  /* HEADER */
+  .header{background:var(--blue3);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid var(--yellow)}
+  .header h1{font-size:18px;font-weight:700;color:#fff}
+  .header span{font-size:12px;color:rgba(255,255,255,0.6)}
+  .btn-admin{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.3);color:#fff;padding:6px 14px;border-radius:6px;font-size:12px;cursor:pointer}
+  .btn-admin:hover{background:rgba(255,255,255,0.2)}
+
+  /* SEMANA BADGE */
+  .week-badge{text-align:center;padding:10px 20px 0;font-size:13px;color:rgba(255,255,255,0.7)}
+  .week-badge strong{color:var(--yellow)}
+
+  /* VIEWS */
+  .view{display:none;padding:16px 20px 80px}
+  .view.active{display:block}
+
+  /* MACHINE LIST */
+  .machine-card{background:var(--blue2);border-radius:var(--radius);padding:16px 18px;margin-bottom:12px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;border:1px solid rgba(255,255,255,0.1);transition:background .15s}
+  .machine-card:hover{background:#0e4d9a}
+  .machine-card .mname{font-size:14px;font-weight:600}
+  .machine-card .mstatus{font-size:11px;margin-top:4px}
+  .status-ok{color:var(--ok)}
+  .status-div{color:var(--div)}
+  .status-pending{color:rgba(255,255,255,0.45)}
+  .arrow{font-size:20px;color:rgba(255,255,255,0.4)}
+
+  /* CHECKLIST VIEW */
+  .checklist-header{display:flex;align-items:center;gap:10px;margin-bottom:18px}
+  .btn-back{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.3);color:#fff;padding:7px 14px;border-radius:6px;font-size:13px;cursor:pointer}
+  .btn-back:hover{background:rgba(255,255,255,0.2)}
+  .checklist-header h2{font-size:15px;font-weight:700;flex:1}
+
+  .tech-field{background:var(--blue2);border-radius:var(--radius);padding:14px 16px;margin-bottom:16px}
+  .tech-field label{font-size:12px;color:rgba(255,255,255,0.6);display:block;margin-bottom:6px}
+  .tech-field input{width:100%;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;padding:9px 12px;border-radius:6px;font-size:14px;outline:none}
+  .tech-field input::placeholder{color:rgba(255,255,255,0.35)}
+  .tech-field input:focus{border-color:var(--yellow)}
+
+  /* ITEM ROWS */
+  .item-row{background:var(--blue2);border-radius:var(--radius);padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:12px;border:2px solid transparent;transition:border-color .2s}
+  .item-row.marked-ok{border-color:var(--ok)}
+  .item-row.marked-div{border-color:var(--div)}
+  .item-name{font-size:14px;font-weight:500;flex:1}
+  .item-btns{display:flex;gap:8px;flex-shrink:0}
+  .btn-ok{background:rgba(46,204,113,0.15);border:1px solid var(--ok);color:var(--ok);padding:7px 16px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;transition:background .15s}
+  .btn-ok:hover,.btn-ok.active{background:var(--ok);color:#fff}
+  .btn-div{background:rgba(231,76,60,0.15);border:1px solid var(--div);color:var(--div);padding:7px 16px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;transition:background .15s}
+  .btn-div:hover,.btn-div.active{background:var(--div);color:#fff}
+
+  /* DIVERGENCIA PANEL */
+  .div-panel{background:rgba(231,76,60,0.12);border:1px solid rgba(231,76,60,0.4);border-radius:var(--radius);padding:14px 16px;margin-bottom:16px;display:none}
+  .div-panel.visible{display:block}
+  .div-panel h4{font-size:13px;font-weight:600;color:var(--div);margin-bottom:8px}
+  .div-list{list-style:none;display:flex;flex-wrap:wrap;gap:8px}
+  .div-list li{background:rgba(231,76,60,0.2);border:1px solid rgba(231,76,60,0.4);border-radius:6px;padding:5px 12px;font-size:13px;color:#fff}
+
+  /* PROGRESS */
+  .progress-bar-wrap{background:rgba(255,255,255,0.1);border-radius:99px;height:6px;margin-bottom:16px;overflow:hidden}
+  .progress-bar-fill{height:100%;background:var(--yellow);border-radius:99px;transition:width .3s}
+
+  /* SUBMIT */
+  .btn-submit{width:100%;background:var(--yellow);color:#1a1a1a;border:none;padding:14px;border-radius:var(--radius);font-size:15px;font-weight:700;cursor:pointer;margin-top:10px;transition:opacity .15s}
+  .btn-submit:disabled{opacity:0.4;cursor:not-allowed}
+  .btn-submit:not(:disabled):hover{opacity:0.9}
+
+  /* RESULTADO */
+  .result-card{background:var(--blue2);border-radius:var(--radius);padding:16px;margin-bottom:12px;border:1px solid rgba(255,255,255,0.1)}
+  .result-card h3{font-size:14px;font-weight:600;margin-bottom:4px}
+  .result-card .meta{font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:10px}
+  .result-item{display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.07);font-size:13px}
+  .result-item:last-child{border-bottom:none}
+  .badge-ok{background:rgba(46,204,113,0.2);color:var(--ok);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600}
+  .badge-div{background:rgba(231,76,60,0.2);color:var(--div);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600}
+
+  /* HISTORY VIEW */
+  .history-card{background:var(--blue2);border-radius:var(--radius);padding:14px 16px;margin-bottom:10px;border:1px solid rgba(255,255,255,0.1);cursor:pointer}
+  .history-card:hover{background:#0e4d9a}
+  .history-card .hc-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+  .history-card .hc-machine{font-size:13px;font-weight:600}
+  .history-card .hc-week{font-size:11px;color:rgba(255,255,255,0.5)}
+  .history-card .hc-tech{font-size:12px;color:rgba(255,255,255,0.6)}
+  .history-card .hc-counts{display:flex;gap:8px;margin-top:6px}
+  .hc-ok{font-size:12px;color:var(--ok);font-weight:600}
+  .hc-div{font-size:12px;color:var(--div);font-weight:600}
+
+  /* TOAST */
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a1a1a;color:#fff;padding:12px 24px;border-radius:8px;font-size:14px;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none}
+  .toast.show{opacity:1}
+
+  /* MODAL ADMIN */
+  .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:100;display:none;align-items:center;justify-content:center}
+  .modal-bg.open{display:flex}
+  .modal{background:var(--blue3);border-radius:var(--radius);padding:24px;width:90%;max-width:360px;border:1px solid rgba(255,255,255,0.2)}
+  .modal h3{font-size:15px;font-weight:600;color:#fff;margin-bottom:14px}
+  .modal input{width:100%;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.25);color:#fff;padding:10px 12px;border-radius:6px;font-size:14px;margin-bottom:12px;outline:none}
+  .modal input::placeholder{color:rgba(255,255,255,0.35)}
+  .modal-btns{display:flex;gap:8px}
+  .btn-cancel{flex:1;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.25);color:#fff;padding:10px;border-radius:6px;cursor:pointer;font-size:13px}
+  .btn-confirm{flex:1;background:var(--yellow);border:none;color:#1a1a1a;padding:10px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:700}
+
+  /* TABS (admin) */
+  .tabs{display:flex;gap:4px;margin-bottom:16px;background:rgba(0,0,0,0.2);border-radius:8px;padding:4px}
+  .tab{flex:1;text-align:center;padding:8px;border-radius:6px;cursor:pointer;font-size:13px;color:rgba(255,255,255,0.6);transition:background .15s}
+  .tab.active{background:var(--yellow);color:#1a1a1a;font-weight:700}
+
+  /* BOTTOM NAV */
+  .bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--blue3);border-top:2px solid var(--yellow);display:flex;z-index:50}
+  .bnav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 0;cursor:pointer;color:rgba(255,255,255,0.5);font-size:11px;gap:3px;transition:color .15s}
+  .bnav-item.active{color:var(--yellow)}
+  .bnav-item svg{width:22px;height:22px;fill:currentColor}
+  .view{padding-bottom:80px}
+
+  /* HISTORY PUBLIC */
+  .hist-filter{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+  .hist-filter select{flex:1;min-width:120px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;padding:8px 10px;border-radius:6px;font-size:13px;outline:none}
+  .hist-filter select option{background:#1055A8;color:#fff}
+
+  /* LOADING */
+  .loading{text-align:center;padding:40px;color:rgba(255,255,255,0.5);font-size:14px}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div>
+    <h1>Checklist Máquinas de Fusão</h1>
+    <span>Connect Já Telecom</span>
+  </div>
+  <button class="btn-admin" id="btnAdmin">Admin</button>
+</div>
+
+<!-- SEMANA ATUAL -->
+<div class="week-badge" id="weekBadge"></div>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+  <div class="bnav-item active" id="nav-machines" onclick="navTo('machines')">
+    <svg viewBox="0 0 24 24"><path d="M2 17h2v.5H3v1h1v.5H2v1h3v-4H2v1zm1-9h1V4H2v1h1v3zm-1 3h1.8L2 13.1v.9h3v-1H3.2L5 10.9V10H2v1zm5-6v2h14V5H7zm0 14h14v-2H7v2zm0-6h14v-2H7v2z"/></svg>
+    Máquinas
+  </div>
+  <div class="bnav-item" id="nav-history" onclick="navTo('histPublic')">
+    <svg viewBox="0 0 24 24"><path d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42A8.954 8.954 0 0 0 13 21a9 9 0 0 0 0-18zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg>
+    Histórico
+  </div>
+</nav>
+
+<!-- VIEW: LISTA DE MÁQUINAS -->
+<div class="view active" id="viewMachines">
+  <div id="machineList"><div class="loading">Carregando máquinas...</div></div>
+</div>
+
+<!-- VIEW: CHECKLIST -->
+<div class="view" id="viewChecklist">
+  <div class="checklist-header">
+    <button class="btn-back" onclick="showMachines()">← Voltar</button>
+    <h2 id="checklistMachineName"></h2>
+  </div>
+
+  <div class="tech-field">
+    <label>Nome do Técnico</label>
+    <input type="text" id="techName" placeholder="Digite seu nome..." autocomplete="off">
+  </div>
+
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-fill" id="progressFill" style="width:0%"></div>
+  </div>
+
+  <!-- PAINEL DE DIVERGÊNCIAS -->
+  <div class="div-panel" id="divPanel">
+    <h4>⚠ Divergências nesta máquina:</h4>
+    <ul class="div-list" id="divList"></ul>
+  </div>
+
+  <div id="itemList"></div>
+
+  <button class="btn-submit" id="btnSubmit" onclick="submitChecklist()">Salvar Checklist</button>
+</div>
+
+<!-- VIEW: RESULTADO (checklist já feito) -->
+<div class="view" id="viewResult">
+  <div class="checklist-header">
+    <button class="btn-back" onclick="showMachines()">← Voltar</button>
+    <h2>Checklist da Semana</h2>
+  </div>
+  <div id="resultContent"></div>
+</div>
+
+<!-- VIEW: HISTÓRICO PÚBLICO -->
+<div class="view" id="viewHistPublic">
+  <div style="font-size:15px;font-weight:700;margin-bottom:14px">Histórico de Checklists</div>
+  <div class="hist-filter">
+    <select id="filterMachine" onchange="loadPublicHistory()">
+      <option value="">Todas as máquinas</option>
+    </select>
+    <select id="filterWeeks" onchange="loadPublicHistory()">
+      <option value="4">Últimas 4 semanas</option>
+      <option value="8">Últimas 8 semanas</option>
+      <option value="99">Tudo</option>
+    </select>
+  </div>
+  <div id="histPublicContent"><div class="loading">Carregando...</div></div>
+</div>
+
+<!-- VIEW: ADMIN / HISTÓRICO -->
+<div class="view" id="viewAdmin">
+  <div class="checklist-header">
+    <button class="btn-back" onclick="showMachines()">← Voltar</button>
+    <h2>Painel Admin</h2>
+  </div>
+  <div class="tabs">
+    <div class="tab active" onclick="adminTab('history')">Histórico</div>
+    <div class="tab" onclick="adminTab('divergencias')">Divergências</div>
+  </div>
+  <div id="adminContent"><div class="loading">Carregando...</div></div>
+</div>
+
+<!-- MODAL ADMIN LOGIN -->
+<div class="modal-bg" id="modalAdmin">
+  <div class="modal">
+    <h3>Acesso Admin</h3>
+    <input type="password" id="adminPwd" placeholder="Senha..." onkeydown="if(e.key==='Enter')doAdminLogin()">
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeAdminModal()">Cancelar</button>
+      <button class="btn-confirm" onclick="doAdminLogin()">Entrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── NAV ────────────────────────────────────────────────────────────────────
+function navTo(section) {
+  document.querySelectorAll('.bnav-item').forEach(el => el.classList.remove('active'));
+  if (section === 'machines') {
+    document.getElementById('nav-machines').classList.add('active');
+    showMachines();
+  } else if (section === 'histPublic') {
+    document.getElementById('nav-history').classList.add('active');
+    openPublicHistory();
+  }
+}
+
+// ── STATE ──────────────────────────────────────────────────────────────────
+let machines = [];
+let checklistItems = [];
+let currentMachine = null;
+let responses = {}; // { item_id: 'ok'|'divergencia' }
+let isAdmin = false;
+let currentAdminTab = 'history';
+
+// ── UTILS ──────────────────────────────────────────────────────────────────
+function getWeek(date = new Date()) {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return { week: Math.ceil((((d - yearStart) / 86400000) + 1) / 7), year: d.getUTCFullYear() };
+}
+
+async function api(method, url, body) {
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(url, opts);
+  if (!res.ok) throw await res.json();
+  return res.json();
+}
+
+function toast(msg, dur = 2500) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), dur);
+}
+
+function showView(id) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ── SEMANA ─────────────────────────────────────────────────────────────────
+function renderWeekBadge() {
+  const { week, year } = getWeek();
+  document.getElementById('weekBadge').innerHTML =
+    `Semana atual: <strong>Semana ${week} / ${year}</strong>`;
+}
+
+// ── MACHINES ───────────────────────────────────────────────────────────────
+async function loadMachines() {
+  const { week, year } = getWeek();
+  machines = await api('GET', '/api/machines');
+  checklistItems = await api('GET', '/api/items');
+
+  // Verifica status de cada máquina nessa semana
+  const statuses = await Promise.all(
+    machines.map(m => api('GET', `/api/checklist/status?machine_id=${m.id}&week=${week}&year=${year}`).catch(() => null))
+  );
+
+  const container = document.getElementById('machineList');
+  container.innerHTML = '';
+  machines.forEach((m, i) => {
+    const st = statuses[i];
+    let statusHtml = '';
+    if (st) {
+      const divCount = st.responses.filter(r => r.status === 'divergencia').length;
+      if (divCount > 0) {
+        statusHtml = `<div class="mstatus status-div">⚠ ${divCount} divergência(s) — ${st.technician_name}</div>`;
+      } else {
+        statusHtml = `<div class="mstatus status-ok">✓ OK — ${st.technician_name}</div>`;
+      }
+    } else {
+      statusHtml = `<div class="mstatus status-pending">Pendente esta semana</div>`;
+    }
+    const card = document.createElement('div');
+    card.className = 'machine-card';
+    card.innerHTML = `<div><div class="mname">${m.name}</div>${statusHtml}</div><span class="arrow">›</span>`;
+    card.onclick = () => openChecklist(m, st);
+    container.appendChild(card);
+  });
+}
+
+function showMachines() {
+  loadMachines();
+  showView('viewMachines');
+}
+
+// ── CHECKLIST ──────────────────────────────────────────────────────────────
+function openChecklist(machine, existingRun) {
+  currentMachine = machine;
+  responses = {};
+
+  document.getElementById('checklistMachineName').textContent = machine.name;
+
+  if (existingRun) {
+    // Já foi feito: mostrar resultado
+    renderResult(existingRun);
+    showView('viewResult');
+    return;
+  }
+
+  document.getElementById('techName').value = '';
+  renderItems();
+  updateProgress();
+  updateDivPanel();
+  showView('viewChecklist');
+}
+
+function renderItems() {
+  const container = document.getElementById('itemList');
+  container.innerHTML = '';
+  checklistItems.forEach(item => {
+    const row = document.createElement('div');
+    row.className = 'item-row';
+    row.id = `row-${item.id}`;
+    row.innerHTML = `
+      <span class="item-name">${item.name}</span>
+      <div class="item-btns">
+        <button class="btn-ok" id="ok-${item.id}" onclick="mark(${item.id},'ok')">✓ OK</button>
+        <button class="btn-div" id="div-${item.id}" onclick="mark(${item.id},'divergencia')">✗ Divergência</button>
+      </div>`;
+    container.appendChild(row);
+  });
+}
+
+function mark(itemId, status) {
+  responses[itemId] = status;
+
+  // Update row style
+  const row = document.getElementById(`row-${itemId}`);
+  row.classList.toggle('marked-ok', status === 'ok');
+  row.classList.toggle('marked-div', status === 'divergencia');
+
+  // Update button active states
+  document.getElementById(`ok-${itemId}`).classList.toggle('active', status === 'ok');
+  document.getElementById(`div-${itemId}`).classList.toggle('active', status === 'divergencia');
+
+  updateProgress();
+  updateDivPanel();
+}
+
+function updateProgress() {
+  const total = checklistItems.length;
+  const done = Object.keys(responses).length;
+  const pct = total > 0 ? (done / total) * 100 : 0;
+  document.getElementById('progressFill').style.width = pct + '%';
+
+  const allDone = done === total && document.getElementById('techName').value.trim().length > 0;
+  document.getElementById('btnSubmit').disabled = !(done === total);
+}
+
+document.getElementById('techName').addEventListener('input', updateProgress);
+
+function updateDivPanel() {
+  const divItems = checklistItems.filter(i => responses[i.id] === 'divergencia');
+  const panel = document.getElementById('divPanel');
+  const list = document.getElementById('divList');
+
+  if (divItems.length > 0) {
+    panel.classList.add('visible');
+    list.innerHTML = divItems.map(i => `<li>⚠ ${i.name}</li>`).join('');
+  } else {
+    panel.classList.remove('visible');
+    list.innerHTML = '';
+  }
+}
+
+async function submitChecklist() {
+  const techName = document.getElementById('techName').value.trim();
+  if (!techName) { toast('Digite o nome do técnico'); return; }
+
+  const total = checklistItems.length;
+  if (Object.keys(responses).length < total) { toast('Marque todos os itens'); return; }
+
+  const { week, year } = getWeek();
+  const payload = {
+    machine_id: currentMachine.id,
+    technician_name: techName,
+    week_number: week,
+    year,
+    responses: checklistItems.map(i => ({ item_id: i.id, status: responses[i.id] }))
+  };
+
+  try {
+    await api('POST', '/api/checklist/submit', payload);
+    toast('✓ Checklist salvo!');
+    setTimeout(() => showMachines(), 800);
+  } catch (e) {
+    toast('Erro ao salvar. Tente novamente.');
+  }
+}
+
+// ── RESULTADO ──────────────────────────────────────────────────────────────
+function renderResult(run) {
+  const divItems = run.responses.filter(r => r.status === 'divergencia');
+  const okItems = run.responses.filter(r => r.status === 'ok');
+  const dateStr = run.created_at ? new Date(run.created_at).toLocaleDateString('pt-BR') : '';
+
+  let html = `<div class="result-card">
+    <h3>${currentMachine.name}</h3>
+    <div class="meta">Técnico: ${run.technician_name} • ${dateStr}</div>`;
+
+  if (divItems.length > 0) {
+    html += `<div style="color:var(--div);font-size:13px;font-weight:600;margin-bottom:8px">⚠ ${divItems.length} divergência(s)</div>`;
+    divItems.forEach(r => {
+      html += `<div class="result-item"><span>${r.item_name}</span><span class="badge-div">Divergência</span></div>`;
+    });
+  }
+  if (okItems.length > 0) {
+    okItems.forEach(r => {
+      html += `<div class="result-item"><span>${r.item_name}</span><span class="badge-ok">OK</span></div>`;
+    });
+  }
+
+  html += `</div>`;
+
+  const { week, year } = getWeek();
+  html += `<button class="btn-submit" style="background:rgba(255,255,255,0.15);color:#fff" onclick="refazerChecklist()">Refazer checklist desta semana</button>`;
+
+  document.getElementById('resultContent').innerHTML = html;
+}
+
+function refazerChecklist() {
+  responses = {};
+  renderItems();
+  updateProgress();
+  updateDivPanel();
+  document.getElementById('techName').value = '';
+  showView('viewChecklist');
+}
+
+// ── HISTÓRICO PÚBLICO ──────────────────────────────────────────────────────
+function openPublicHistory() {
+  // Popula filtro de máquinas
+  const sel = document.getElementById('filterMachine');
+  if (sel.options.length === 1) {
+    machines.forEach(m => {
+      const opt = document.createElement('option');
+      opt.value = m.id;
+      opt.textContent = m.name;
+      sel.appendChild(opt);
+    });
+  }
+  showView('viewHistPublic');
+  loadPublicHistory();
+}
+
+async function loadPublicHistory() {
+  const container = document.getElementById('histPublicContent');
+  container.innerHTML = '<div class="loading">Carregando...</div>';
+  const rows = await api('GET', '/api/history');
+  if (!rows.length) { container.innerHTML = '<div class="loading">Nenhum checklist registrado ainda.</div>'; return; }
+
+  const machineFilter = document.getElementById('filterMachine').value;
+  const weeksFilter = parseInt(document.getElementById('filterWeeks').value);
+  const { week: currentWeek, year: currentYear } = getWeek();
+
+  const filtered = rows.filter(r => {
+    if (machineFilter && String(r.machine_id) !== machineFilter) return false;
+    // Filtra por semanas atrás
+    const weeksAgo = (currentYear - r.year) * 52 + (currentWeek - r.week_number);
+    return weeksAgo <= weeksFilter;
+  });
+
+  if (!filtered.length) { container.innerHTML = '<div class="loading">Nenhum resultado para este filtro.</div>'; return; }
+
+  container.innerHTML = filtered.map(r => {
+    const dateStr = new Date(r.created_at).toLocaleDateString('pt-BR');
+    const hasDiv = r.div_count > 0;
+    return `<div class="history-card" onclick="showRunDetail(${r.id})">
+      <div class="hc-top">
+        <span class="hc-machine">${r.machine_name}</span>
+        <span class="hc-week">Sem. ${r.week_number}/${r.year}</span>
+      </div>
+      <div class="hc-tech">👤 ${r.technician_name} • ${dateStr}</div>
+      <div class="hc-counts">
+        <span class="hc-ok">✓ ${r.ok_count} OK</span>
+        ${hasDiv ? `<span class="hc-div">⚠ ${r.div_count} Divergência(s)</span>` : '<span style="font-size:12px;color:rgba(255,255,255,0.4)">Tudo OK</span>'}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── ADMIN ──────────────────────────────────────────────────────────────────
+document.getElementById('btnAdmin').addEventListener('click', () => {
+  if (isAdmin) {
+    showView('viewAdmin');
+    loadAdminContent();
+  } else {
+    document.getElementById('modalAdmin').classList.add('open');
+    setTimeout(() => document.getElementById('adminPwd').focus(), 100);
+  }
+});
+
+function closeAdminModal() {
+  document.getElementById('modalAdmin').classList.remove('open');
+  document.getElementById('adminPwd').value = '';
+}
+
+async function doAdminLogin() {
+  const pwd = document.getElementById('adminPwd').value;
+  try {
+    await api('POST', '/api/login', { password: pwd });
+    isAdmin = true;
+    closeAdminModal();
+    document.getElementById('btnAdmin').textContent = 'Painel';
+    showView('viewAdmin');
+    loadAdminContent();
+  } catch {
+    toast('Senha incorreta');
+  }
+}
+
+document.getElementById('adminPwd').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doAdminLogin();
+});
+
+function adminTab(tab) {
+  currentAdminTab = tab;
+  document.querySelectorAll('.tab').forEach((t, i) => {
+    t.classList.toggle('active', (i === 0 && tab === 'history') || (i === 1 && tab === 'divergencias'));
+  });
+  loadAdminContent();
+}
+
+async function loadAdminContent() {
+  const container = document.getElementById('adminContent');
+  container.innerHTML = '<div class="loading">Carregando...</div>';
+
+  if (currentAdminTab === 'history') {
+    const rows = await api('GET', '/api/history');
+    if (!rows.length) { container.innerHTML = '<div class="loading">Nenhum checklist registrado.</div>'; return; }
+    container.innerHTML = rows.map(r => {
+      const dateStr = new Date(r.created_at).toLocaleDateString('pt-BR');
+      return `<div class="history-card" onclick="showRunDetail(${r.id})">
+        <div class="hc-top">
+          <span class="hc-machine">${r.machine_name}</span>
+          <span class="hc-week">Sem. ${r.week_number}/${r.year}</span>
+        </div>
+        <div class="hc-tech">👤 ${r.technician_name} • ${dateStr}</div>
+        <div class="hc-counts">
+          <span class="hc-ok">✓ ${r.ok_count} OK</span>
+          ${r.div_count > 0 ? `<span class="hc-div">⚠ ${r.div_count} Divergência(s)</span>` : ''}
+        </div>
+      </div>`;
+    }).join('');
+  } else {
+    const rows = await api('GET', '/api/divergencias');
+    if (!rows.length) { container.innerHTML = '<div class="loading" style="color:var(--ok)">✓ Nenhuma divergência nos últimos 30 dias.</div>'; return; }
+    container.innerHTML = rows.map(r => {
+      const dateStr = new Date(r.created_at).toLocaleDateString('pt-BR');
+      return `<div class="history-card">
+        <div class="hc-top">
+          <span class="hc-machine">${r.machine_name}</span>
+          <span class="hc-week">Sem. ${r.week_number}/${r.year}</span>
+        </div>
+        <div class="hc-tech" style="color:var(--div);font-weight:600">⚠ ${r.item_name}</div>
+        <div class="hc-tech">👤 ${r.technician_name} • ${dateStr}</div>
+      </div>`;
+    }).join('');
+  }
+}
+
+async function showRunDetail(runId) {
+  const items = await api('GET', `/api/history/${runId}`);
+  const modal = document.createElement('div');
+  modal.className = 'modal-bg open';
+  modal.innerHTML = `<div class="modal" style="max-height:80vh;overflow-y:auto">
+    <h3>Detalhes do Checklist</h3>
+    ${items.map(i => `
+      <div class="result-item">
+        <span>${i.item_name}</span>
+        <span class="${i.status === 'ok' ? 'badge-ok' : 'badge-div'}">${i.status === 'ok' ? 'OK' : 'Divergência'}</span>
+      </div>`).join('')}
+    <br>
+    <button class="btn-cancel" onclick="this.closest('.modal-bg').remove()">Fechar</button>
+  </div>`;
+  document.body.appendChild(modal);
+}
+
+// ── INIT ───────────────────────────────────────────────────────────────────
+(async () => {
+  renderWeekBadge();
+  const me = await api('GET', '/api/me').catch(() => ({ isAdmin: false }));
+  isAdmin = me.isAdmin;
+  if (isAdmin) document.getElementById('btnAdmin').textContent = 'Painel';
+  await loadMachines();
+})();
+</script>
+</body>
+</html>
