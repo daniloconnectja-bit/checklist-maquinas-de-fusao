@@ -1,0 +1,1303 @@
+<div class="modal-bg" id="modalTech">
+  <div class="modal">
+    <div class="modal-title" id="modalTechTitle">Novo Técnico</div>
+    <input type="hidden" id="techEditId">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 12px">
+      <div class="modal-field" style="grid-column:1/-1"><label>Nome Completo *</label><input type="text" id="techEditName" placeholder="Nome completo"></div>
+      <div class="modal-field"><label>CPF *</label><input type="tel" id="techEditCpf" placeholder="000.000.000-00" maxlength="14"></div>
+      <div class="modal-field"><label>Matrícula</label><input type="text" id="techEditMatricula" placeholder="Nº matrícula"></div>
+      <div class="modal-field"><label>RG</label><input type="text" id="techEditRg" placeholder="Ex: CE-129358987"></div>
+      <div class="modal-field"><label>Sexo</label><select id="techEditSexo"><option value="">—</option><option>Masculino</option><option>Feminino</option></select></div>
+      <div class="modal-field"><label>Data de Nascimento</label><input type="date" id="techEditNascimento"></div>
+      <div class="modal-field"><label>Cargo / Função</label><input type="text" id="techEditRole" placeholder="Ex: Instalador Cabista"></div>
+      <div class="modal-field"><label>Nível</label><select id="techEditLevel"><option>Júnior</option><option>Pleno</option><option>Sênior</option><option>Líder</option></select></div>
+      <div class="modal-field"><label>Setor</label><input type="text" id="techEditSetor" placeholder="Ex: SUPORTE"></div>
+      <div class="modal-field"><label>Unidade</label><input type="text" id="techEditUnidade" placeholder="Ex: Connect Já"></div>
+      <div class="modal-field"><label>Data de Admissão</label><input type="date" id="techEditAdmissao"></div>
+      <div class="modal-field"><label>Data de Demissão</label><input type="date" id="techEditDemissao"></div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal('modalTech')">Cancelar</button>
+      <button class="btn-save" onclick="saveTech()">Salvar</button>
+    </div>
+  </div>
+</div><!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Checklist — Connect Já</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;font-family:'Segoe UI',system-ui,sans-serif;background:#F0F4F8;color:#1a2233;font-size:15px}
+:root{
+  --blue:#1565C0;--blue-dark:#0d47a1;--blue-light:#E3EEFF;
+  --yellow:#F9B42D;--ok:#16a34a;--ok-bg:#dcfce7;
+  --nao:#dc2626;--nao-bg:#fee2e2;--gray:#64748b;
+  --gray-light:#f1f5f9;--border:#e2e8f0;--white:#ffffff;
+  --shadow:0 1px 4px rgba(0,0,0,.08);--shadow-md:0 4px 16px rgba(0,0,0,.12);
+  --radius:12px;--radius-sm:8px;
+}
+.app{display:flex;flex-direction:column;height:100%;max-width:480px;margin:0 auto;background:var(--white);position:relative;box-shadow:0 0 40px rgba(0,0,0,.1)}
+
+/* TOPBAR */
+.topbar{background:var(--blue);color:#fff;padding:0 16px;display:flex;align-items:center;height:56px;gap:12px;flex-shrink:0;position:sticky;top:0;z-index:40}
+.topbar-back{background:none;border:none;color:#fff;font-size:22px;cursor:pointer;padding:4px;line-height:1;display:none;align-items:center}
+.topbar-back.visible{display:flex}
+.topbar-title{flex:1;font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar-sub{font-size:11px;opacity:.7;display:block;font-weight:400}
+.topbar-action{background:none;border:none;color:#fff;cursor:pointer;font-size:22px;padding:4px;display:flex;align-items:center}
+
+/* VIEWS */
+.view{display:none;flex:1;overflow-y:auto;padding-bottom:72px}
+.view.active{display:block}
+
+/* BOTTOM NAV */
+.bottom-nav{position:sticky;bottom:0;background:var(--white);border-top:1px solid var(--border);display:flex;z-index:40;flex-shrink:0}
+.bnav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:9px 0 6px;cursor:pointer;color:var(--gray);font-size:10px;font-weight:500;gap:3px;transition:color .15s}
+.bnav-item.active{color:var(--blue)}
+.bnav-item svg{width:22px;height:22px}
+
+/* LOGIN */
+.login-wrap{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;background:var(--white)}
+.login-logo{width:80px;height:80px;background:var(--blue);border-radius:20px;display:flex;align-items:center;justify-content:center;margin-bottom:24px;box-shadow:0 8px 24px rgba(21,101,192,.35)}
+.login-logo svg{width:44px;height:44px;fill:#fff}
+.login-title{font-size:22px;font-weight:700;color:var(--blue-dark);margin-bottom:6px;text-align:center}
+.login-sub{font-size:13px;color:var(--gray);margin-bottom:32px;text-align:center}
+.login-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:24px;width:100%;max-width:360px;box-shadow:var(--shadow-md)}
+.field-label{font-size:12px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;display:block}
+.field-input{width:100%;border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;font-size:16px;color:#1a2233;outline:none;transition:border-color .2s;background:var(--white);letter-spacing:.08em}
+.field-input:focus{border-color:var(--blue)}
+.btn-primary{width:100%;background:var(--blue);color:#fff;border:none;border-radius:var(--radius-sm);padding:14px;font-size:15px;font-weight:700;cursor:pointer;margin-top:16px;transition:background .15s}
+.btn-primary:hover{background:var(--blue-dark)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed}
+.login-admin-link{font-size:13px;color:var(--blue);cursor:pointer;margin-top:20px;text-align:center;display:block}
+
+/* TECH BANNER */
+.tech-banner{background:var(--blue-light);border-bottom:1px solid #c7d9f5;padding:12px 16px;display:flex;align-items:center;gap:12px}
+.tech-avatar{width:38px;height:38px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;color:#fff;font-size:15px;font-weight:700;flex-shrink:0}
+.tech-info{flex:1}
+.tech-name{font-size:14px;font-weight:700;color:var(--blue-dark)}
+.tech-role{font-size:11px;color:var(--gray)}
+.btn-logout{background:none;border:1px solid var(--blue);color:var(--blue);font-size:11px;padding:5px 12px;border-radius:6px;cursor:pointer;font-weight:600}
+
+/* SECTION HEADER */
+.section-header{padding:20px 16px 12px;display:flex;align-items:center;justify-content:space-between}
+.section-title{font-size:17px;font-weight:700}
+.section-sub{font-size:12px;color:var(--gray);margin-top:2px}
+.badge-week{background:var(--blue-light);color:var(--blue);font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px}
+
+/* MACHINE CARDS */
+.machine-list{padding:0 16px}
+.machine-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:10px;cursor:pointer;display:flex;align-items:center;gap:14px;transition:box-shadow .15s,border-color .15s;box-shadow:var(--shadow)}
+.machine-card:hover{box-shadow:var(--shadow-md);border-color:#c7d9f5}
+.machine-icon{width:44px;height:44px;border-radius:10px;background:var(--blue-light);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.machine-icon svg{width:22px;height:22px;fill:var(--blue)}
+.machine-info{flex:1;min-width:0}
+.machine-name{font-size:13px;font-weight:600;color:#1a2233;line-height:1.3}
+.machine-status{font-size:11px;margin-top:4px}
+.status-ok{color:var(--ok);font-weight:600}
+.status-nao{color:var(--nao);font-weight:600}
+.status-pending{color:var(--gray)}
+.machine-arrow{color:#cbd5e1;font-size:18px;flex-shrink:0}
+
+/* ERROR STATE */
+.error-state{text-align:center;padding:48px 24px}
+.error-state svg{width:48px;height:48px;fill:#fca5a5;margin-bottom:12px}
+.error-state p{color:var(--gray);font-size:14px;margin-bottom:16px}
+.btn-retry{background:var(--blue);color:#fff;border:none;border-radius:var(--radius-sm);padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer}
+
+/* CHECKLIST */
+.checklist-wrap{padding:0 16px}
+.checklist-machine-badge{background:var(--blue-light);border-radius:var(--radius-sm);padding:10px 14px;margin:16px 0 12px;display:flex;align-items:center;gap:8px}
+.checklist-machine-badge svg{width:18px;height:18px;fill:var(--blue);flex-shrink:0}
+.checklist-machine-badge span{font-size:13px;font-weight:600;color:var(--blue-dark)}
+.progress-wrap{margin-bottom:14px}
+.progress-label{display:flex;justify-content:space-between;font-size:12px;color:var(--gray);margin-bottom:5px}
+.progress-bar{background:var(--border);border-radius:99px;height:5px;overflow:hidden}
+.progress-fill{height:100%;background:var(--blue);border-radius:99px;transition:width .3s}
+
+/* ITEM CARD */
+.item-card{background:var(--white);border:1.5px solid var(--border);border-radius:var(--radius);margin-bottom:10px;transition:border-color .2s;overflow:hidden}
+.item-card.marked-ok{border-color:var(--ok)}
+.item-card.marked-nao{border-color:var(--nao)}
+.item-card-top{padding:14px 14px 12px 16px;display:flex;align-items:center;gap:12px}
+.item-num{width:26px;height:26px;border-radius:50%;background:var(--gray-light);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--gray);flex-shrink:0}
+.item-card.marked-ok .item-num{background:var(--ok-bg);color:var(--ok)}
+.item-card.marked-nao .item-num{background:var(--nao-bg);color:var(--nao)}
+.item-name{flex:1;font-size:14px;font-weight:500;color:#1a2233}
+.item-btns{display:flex;gap:6px;flex-shrink:0}
+.btn-ok{width:40px;height:40px;border-radius:8px;border:1.5px solid #d1fae5;background:#f0fdf4;color:var(--ok);font-size:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;font-weight:700}
+.btn-ok.active,.btn-ok:hover{background:var(--ok);border-color:var(--ok);color:#fff}
+.btn-nao{width:40px;height:40px;border-radius:8px;border:1.5px solid #fecaca;background:#fef2f2;color:var(--nao);font-size:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;font-weight:700}
+.btn-nao.active,.btn-nao:hover{background:var(--nao);border-color:var(--nao);color:#fff}
+
+/* FOTO SECTION */
+.item-photo-section{padding:0 14px 12px 56px;display:none}
+.item-photo-section.visible{display:block}
+.btn-camera{display:flex;align-items:center;gap:8px;background:var(--gray-light);border:1.5px dashed var(--border);border-radius:8px;padding:9px 14px;font-size:12px;font-weight:600;color:var(--gray);cursor:pointer;width:100%}
+.btn-camera:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-light)}
+.btn-camera svg{width:18px;height:18px;flex-shrink:0}
+.photo-preview-wrap{position:relative;display:inline-block;margin-top:8px}
+.photo-preview{width:120px;height:90px;object-fit:cover;border-radius:8px;border:2px solid var(--border);display:block;cursor:pointer}
+.btn-remove-photo{position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;background:var(--nao);border:2px solid white;color:#fff;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1}
+
+/* NAO PANEL */
+.nao-panel{background:#fef2f2;border:1px solid #fecaca;border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:14px;display:none}
+.nao-panel.visible{display:block}
+.nao-panel-title{font-size:12px;font-weight:700;color:var(--nao);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.nao-tags{display:flex;flex-wrap:wrap;gap:6px}
+.nao-tag{background:#fee2e2;border:1px solid #fecaca;border-radius:6px;padding:4px 10px;font-size:12px;color:var(--nao)}
+
+.btn-submit{width:100%;background:var(--blue);color:#fff;border:none;border-radius:var(--radius-sm);padding:15px;font-size:15px;font-weight:700;cursor:pointer;margin-top:10px;transition:opacity .15s}
+.btn-submit:disabled{opacity:.35;cursor:not-allowed}
+
+/* RESULTADO */
+.result-wrap{padding:16px}
+.result-header-card{background:var(--blue);border-radius:var(--radius);padding:18px;color:#fff;margin-bottom:14px}
+.result-machine{font-size:14px;font-weight:700;margin-bottom:4px}
+.result-meta{font-size:12px;opacity:.8}
+.result-counts{display:flex;gap:10px;margin-top:12px}
+.result-count-ok{background:rgba(255,255,255,.15);border-radius:8px;padding:8px 14px;text-align:center;flex:1}
+.result-count-nao{background:rgba(220,38,38,.3);border-radius:8px;padding:8px 14px;text-align:center;flex:1}
+.count-num{font-size:22px;font-weight:800;display:block}
+.count-label{font-size:11px;opacity:.85}
+.result-section-title{font-size:13px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.05em;margin:16px 0 8px}
+.result-item-row{padding:10px 0;border-bottom:1px solid var(--border);font-size:14px}
+.result-item-row:last-child{border-bottom:none}
+.result-item-top{display:flex;align-items:center;justify-content:space-between}
+.result-item-photo{width:100%;max-width:200px;border-radius:8px;border:1px solid var(--border);margin-top:8px;cursor:pointer}
+.badge-ok{background:var(--ok-bg);color:var(--ok);border-radius:6px;padding:3px 10px;font-size:11px;font-weight:700}
+.badge-nao{background:var(--nao-bg);color:var(--nao);border-radius:6px;padding:3px 10px;font-size:11px;font-weight:700}
+.btn-redo{width:100%;background:var(--gray-light);color:#1a2233;border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:13px;font-size:14px;font-weight:600;cursor:pointer;margin-top:16px}
+
+/* HISTÓRICO */
+.history-wrap{padding:0 16px}
+.hist-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:8px;cursor:pointer;box-shadow:var(--shadow)}
+.hist-card:hover{box-shadow:var(--shadow-md)}
+.hist-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px}
+.hist-machine{font-size:13px;font-weight:700}
+.hist-date{font-size:11px;color:var(--gray)}
+.hist-tech{font-size:12px;color:var(--gray);margin-bottom:6px}
+.hist-counts{display:flex;gap:8px}
+.hist-ok{font-size:12px;font-weight:700;color:var(--ok);background:var(--ok-bg);padding:3px 10px;border-radius:99px}
+.hist-nao{font-size:12px;font-weight:700;color:var(--nao);background:var(--nao-bg);padding:3px 10px;border-radius:99px}
+.hist-allok{font-size:12px;color:var(--gray)}
+
+/* ADMIN */
+.admin-wrap{padding:0 16px 24px}
+.admin-tabs{display:flex;gap:0;background:var(--gray-light);border-radius:var(--radius-sm);padding:4px;margin:16px 0}
+.admin-tab{flex:1;text-align:center;padding:9px 4px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;color:var(--gray);transition:all .15s}
+.admin-tab.active{background:var(--white);color:var(--blue);box-shadow:var(--shadow)}
+.admin-section{display:none}
+.admin-section.active{display:block}
+.admin-list-item{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px}
+.admin-list-info{flex:1;min-width:0}
+.admin-list-name{font-size:14px;font-weight:600}
+.admin-list-sub{font-size:12px;color:var(--gray);margin-top:2px}
+.btn-icon{width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:var(--gray-light);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--gray);flex-shrink:0}
+.btn-icon:hover{background:var(--border)}
+.btn-icon.danger:hover{background:#fee2e2;color:var(--nao);border-color:#fecaca}
+.btn-add{width:100%;background:var(--blue-light);border:1.5px dashed var(--blue);border-radius:var(--radius-sm);padding:13px;font-size:14px;font-weight:600;color:var(--blue);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:4px}
+.btn-add:hover{background:#d0e4ff}
+
+/* RELATÓRIO */
+.report-controls{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:16px;box-shadow:var(--shadow)}
+.report-select{flex:1;min-width:120px;border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;font-size:14px;color:#1a2233;outline:none;background:var(--white)}
+.report-select:focus{border-color:var(--blue)}
+.report-select-row{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap}
+.btn-generate{background:var(--blue);color:#fff;border:none;border-radius:var(--radius-sm);padding:11px 20px;font-size:14px;font-weight:700;cursor:pointer;margin-top:10px;width:100%}
+.btn-print{background:var(--ok);color:#fff;border:none;border-radius:var(--radius-sm);padding:11px 20px;font-size:14px;font-weight:700;cursor:pointer;width:100%;margin-top:8px;display:none}
+.btn-print.visible{display:block}
+
+/* MODAL */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none;align-items:flex-end;justify-content:center}
+.modal-bg.open{display:flex}
+.modal{background:var(--white);border-radius:20px 20px 0 0;padding:24px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;animation:slideUp .25s ease}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-title{font-size:16px;font-weight:700;margin-bottom:18px}
+.modal-field{margin-bottom:14px}
+.modal-field label{font-size:12px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px}
+.modal-field input,.modal-field select{width:100%;border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:11px 13px;font-size:15px;color:#1a2233;outline:none;background:var(--white)}
+.modal-field input:focus,.modal-field select:focus{border-color:var(--blue)}
+.modal-btns{display:flex;gap:10px;margin-top:6px}
+.btn-cancel{flex:1;background:var(--gray-light);border:1px solid var(--border);color:#1a2233;border-radius:var(--radius-sm);padding:13px;cursor:pointer;font-size:14px;font-weight:600}
+.btn-save{flex:2;background:var(--blue);border:none;color:#fff;border-radius:var(--radius-sm);padding:13px;cursor:pointer;font-size:14px;font-weight:700}
+
+/* PHOTO VIEWER MODAL */
+.photo-viewer-modal{position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:300;display:none;align-items:center;justify-content:center}
+.photo-viewer-modal.open{display:flex}
+.photo-viewer-modal img{max-width:95vw;max-height:90vh;border-radius:8px;object-fit:contain}
+.photo-viewer-close{position:absolute;top:16px;right:16px;background:rgba(255,255,255,.2);border:none;color:#fff;font-size:28px;width:44px;height:44px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center}
+
+/* TOAST */
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1a2233;color:#fff;padding:11px 20px;border-radius:10px;font-size:13px;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1}
+
+/* LOADING / EMPTY */
+.loading{text-align:center;padding:48px;color:var(--gray);font-size:14px}
+.spinner{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty{text-align:center;padding:48px 24px}
+.empty svg{width:48px;height:48px;fill:#cbd5e1;margin-bottom:12px}
+.empty p{color:var(--gray);font-size:14px}
+
+/* PRINT */
+#printArea{display:none}
+@media print{
+  body *{display:none!important}
+  #printArea{display:block!important;font-family:'Segoe UI',sans-serif;padding:20px;color:#000}
+  .pr-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;border-bottom:3px solid #1565C0;padding-bottom:14px}
+  .pr-company{font-size:18px;font-weight:800;color:#1565C0}
+  .pr-title{font-size:14px;font-weight:700;margin-top:2px}
+  .pr-meta{font-size:11px;color:#555;margin-top:2px}
+  .pr-tech-box{background:#f0f4f8;border-radius:8px;padding:14px;margin-bottom:18px;display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .pr-field{font-size:12px;color:#555}
+  .pr-field strong{color:#000;font-size:13px}
+  .pr-record{margin-bottom:16px;border:1px solid #ddd;border-radius:8px;overflow:hidden;page-break-inside:avoid}
+  .pr-record-header{background:#1565C0;color:#fff;padding:10px 14px;display:flex;justify-content:space-between;align-items:center}
+  .pr-record-machine{font-size:13px;font-weight:700}
+  .pr-record-date{font-size:11px;opacity:.85}
+  .pr-row{padding:8px 14px;border-bottom:1px solid #f0f0f0;font-size:12px}
+  .pr-row:last-child{border-bottom:none}
+  .pr-row-top{display:flex;align-items:center;justify-content:space-between}
+  .pr-ok{color:#16a34a;font-weight:700}
+  .pr-nao{color:#dc2626;font-weight:700}
+  .pr-photo{width:120px;height:90px;object-fit:cover;border-radius:6px;border:1px solid #ddd;margin-top:6px;display:block}
+  .pr-summary{display:flex;gap:10px;padding:10px 14px;background:#f8f8f8;font-size:12px;border-top:1px solid #eee}
+  .pr-footer{margin-top:30px;border-top:2px solid #1565C0;padding-top:14px;display:flex;justify-content:space-between;font-size:11px;color:#555}
+  .pr-sign{text-align:center}
+  .pr-sign-line{width:180px;border-top:1px solid #000;margin:40px auto 6px}
+}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+  <div class="topbar">
+    <button class="topbar-back" id="topbarBack" onclick="goBack()">&#8592;</button>
+    <div style="flex:1;min-width:0">
+      <div class="topbar-title" id="topbarTitle">Connect Já</div>
+      <span class="topbar-sub" id="topbarSub">Checklist de Máquinas</span>
+    </div>
+    <button class="topbar-action" id="topbarAdminBtn" onclick="navTo('admin')" title="Admin" style="display:none">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
+    </button>
+  </div>
+
+  <!-- LOGIN -->
+  <div class="view active" id="viewLogin" style="padding-bottom:0;overflow-y:auto">
+    <div class="login-wrap">
+      <div class="login-logo">
+        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z"/></svg>
+      </div>
+      <div class="login-title">Checklist de Máquinas</div>
+      <div class="login-sub">Connect Já Telecom</div>
+      <div class="login-card">
+        <label class="field-label" for="cpfInput">CPF do Técnico</label>
+        <input class="field-input" type="tel" id="cpfInput" placeholder="000.000.000-00" maxlength="14">
+        <button class="btn-primary" id="btnLogin" onclick="doLogin()">Entrar</button>
+      </div>
+      <span class="login-admin-link" onclick="openAdminLoginModal()">Acesso administrativo</span>
+    </div>
+  </div>
+
+  <!-- MÁQUINAS -->
+  <div class="view" id="viewMachines">
+    <div class="tech-banner">
+      <div class="tech-avatar" id="techAvatar">?</div>
+      <div class="tech-info">
+        <div class="tech-name" id="techNameDisplay">—</div>
+        <div class="tech-role" id="techRoleDisplay">—</div>
+      </div>
+      <button class="btn-logout" onclick="doLogout()">Sair</button>
+    </div>
+    <div class="section-header">
+      <div>
+        <div class="section-title">Máquinas</div>
+        <div class="section-sub" id="periodLabel">—</div>
+      </div>
+      <span class="badge-week" id="weekBadge">—</span>
+    </div>
+    <div class="machine-list" id="machineList">
+      <div class="loading"><div class="spinner"></div>Carregando...</div>
+    </div>
+  </div>
+
+  <!-- CHECKLIST -->
+  <div class="view" id="viewChecklist">
+    <div class="checklist-wrap">
+      <div class="checklist-machine-badge">
+        <svg viewBox="0 0 24 24"><path d="M2 17h2v.5H3v1h1v.5H2v1h3v-4H2v1zm1-9h1V4H2v1h1v3zm-1 3h1.8L2 13.1v.9h3v-1H3.2L5 10.9V10H2v1zm5-6v2h14V5H7zm0 14h14v-2H7v2zm0-6h14v-2H7v2z"/></svg>
+        <span id="checklistMachineName">—</span>
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-label">
+          <span id="progressText">0 / 0 itens</span>
+          <span id="progressPct">0%</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+      </div>
+      <div class="nao-panel" id="naoPanel">
+        <div class="nao-panel-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+          Itens com problema:
+        </div>
+        <div class="nao-tags" id="naoTags"></div>
+      </div>
+      <div id="itemList"></div>
+      <button class="btn-submit" id="btnSubmit" onclick="submitChecklist()" disabled>Salvar Checklist</button>
+    </div>
+  </div>
+
+  <!-- RESULTADO -->
+  <div class="view" id="viewResult">
+    <div class="result-wrap" id="resultWrap"></div>
+  </div>
+
+  <!-- HISTÓRICO -->
+  <div class="view" id="viewHistory">
+    <div class="section-header">
+      <div class="section-title">Histórico</div>
+    </div>
+    <div class="history-wrap" id="historyList">
+      <div class="loading"><div class="spinner"></div>Carregando...</div>
+    </div>
+  </div>
+
+  <!-- ADMIN -->
+  <div class="view" id="viewAdmin">
+    <div class="admin-wrap">
+      <div class="admin-tabs">
+        <div class="admin-tab active" onclick="adminTab('techs')">Técnicos</div>
+        <div class="admin-tab" onclick="adminTab('machines')">Máquinas</div>
+        <div class="admin-tab" onclick="adminTab('items')">Itens</div>
+        <div class="admin-tab" onclick="adminTab('report')">Relatório</div>
+        <div class="admin-tab" onclick="adminTab('danger')" style="color:#dc2626">⚠</div>
+      </div>
+      <div class="admin-section active" id="adminTechs">
+        <div id="techsList"></div>
+        <button class="btn-add" onclick="openTechModal(null)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+          Novo Técnico
+        </button>
+      </div>
+      <div class="admin-section" id="adminMachines">
+        <div id="machinesAdminList"></div>
+        <button class="btn-add" onclick="openMachineModal(null)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+          Nova Máquina
+        </button>
+      </div>
+      <div class="admin-section" id="adminItems">
+        <div style="margin-bottom:10px">
+          <label class="field-label">Template</label>
+          <select class="report-select" id="adminTemplateSelect" onchange="loadAdminItems()" style="width:100%"></select>
+        </div>
+        <div id="itemsAdminList"></div>
+        <button class="btn-add" onclick="openItemModal(null)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+          Novo Item
+        </button>
+      </div>
+      <div class="admin-section" id="adminReport">
+        <div class="report-controls">
+          <div class="section-title">Relatório Mensal</div>
+          <div class="report-select-row">
+            <select class="report-select" id="reportTech"><option value="">Técnico...</option></select>
+            <select class="report-select" id="reportMonth">
+              <option value="1">Jan</option><option value="2">Fev</option><option value="3">Mar</option>
+              <option value="4">Abr</option><option value="5">Mai</option><option value="6">Jun</option>
+              <option value="7">Jul</option><option value="8">Ago</option><option value="9">Set</option>
+              <option value="10">Out</option><option value="11">Nov</option><option value="12">Dez</option>
+            </select>
+            <select class="report-select" id="reportYear"></select>
+          </div>
+          <button class="btn-generate" onclick="generateReport()">Gerar Relatório</button>
+          <button class="btn-print" id="btnPrint" onclick="window.print()">🖨 Imprimir</button>
+        </div>
+        <div id="reportPreview"></div>
+      </div>
+      <!-- DANGER ZONE -->
+      <div class="admin-section" id="adminDanger">
+        <div style="background:#fef2f2;border:1.5px solid #fecaca;border-radius:var(--radius);padding:20px;margin-top:8px">
+          <div style="font-size:15px;font-weight:700;color:#dc2626;margin-bottom:6px">⚠ Zona de Perigo</div>
+          <p style="font-size:13px;color:#64748b;margin-bottom:16px">Estas ações são irreversíveis. Use apenas para apagar dados de teste.</p>
+          <button onclick="clearTestData()" style="width:100%;background:#dc2626;color:#fff;border:none;border-radius:var(--radius-sm);padding:13px;font-size:14px;font-weight:700;cursor:pointer">
+            🗑 Apagar todos os checklists
+          </button>
+          <p style="font-size:11px;color:#94a3b8;margin-top:8px;text-align:center">Técnicos, máquinas e itens NÃO serão apagados</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav" id="bottomNav" style="display:none">
+    <div class="bnav-item active" id="nav-machines" onclick="navTo('machines')">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 17h2v.5H3v1h1v.5H2v1h3v-4H2v1zm1-9h1V4H2v1h1v3zm-1 3h1.8L2 13.1v.9h3v-1H3.2L5 10.9V10H2v1zm5-6v2h14V5H7zm0 14h14v-2H7v2zm0-6h14v-2H7v2z"/></svg>
+      Máquinas
+    </div>
+    <div class="bnav-item" id="nav-history" onclick="navTo('history')">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42A8.954 8.954 0 0 0 13 21a9 9 0 0 0 0-18zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg>
+      Histórico
+    </div>
+  </nav>
+</div>
+
+<!-- PHOTO VIEWER -->
+<div class="photo-viewer-modal" id="photoViewer" onclick="closePhotoViewer()">
+  <button class="photo-viewer-close">✕</button>
+  <img id="photoViewerImg" src="" alt="Foto">
+</div>
+
+<!-- PRINT AREA -->
+<div id="printArea"></div>
+
+<!-- MODAIS -->
+<div class="modal-bg" id="modalAdminLogin">
+  <div class="modal">
+    <div class="modal-title">Acesso Administrativo</div>
+    <div class="modal-field">
+      <label>Senha</label>
+      <input type="password" id="adminPwd" placeholder="Digite a senha..." onkeydown="if(event.key==='Enter')doAdminLogin()">
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal('modalAdminLogin')">Cancelar</button>
+      <button class="btn-save" onclick="doAdminLogin()">Entrar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modalTech">
+  <div class="modal">
+    <div class="modal-title" id="modalTechTitle">Novo Técnico</div>
+    <input type="hidden" id="techEditId">
+    <div class="modal-field"><label>Nome Completo</label><input type="text" id="techEditName" placeholder="Nome do técnico"></div>
+    <div class="modal-field"><label>CPF</label><input type="tel" id="techEditCpf" placeholder="000.000.000-00" maxlength="14"></div>
+    <div class="modal-field"><label>Cargo / Função</label><input type="text" id="techEditRole" placeholder="Técnico de Campo"></div>
+    <div class="modal-field"><label>Nível</label>
+      <select id="techEditLevel"><option>Júnior</option><option>Pleno</option><option>Sênior</option><option>Líder</option></select>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal('modalTech')">Cancelar</button>
+      <button class="btn-save" onclick="saveTech()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modalMachine">
+  <div class="modal">
+    <div class="modal-title" id="modalMachineTitle">Nova Máquina</div>
+    <input type="hidden" id="machineEditId">
+    <div class="modal-field"><label>Nome</label><input type="text" id="machineEditName" placeholder="Ex: SIGNAL FIRE AI-10"></div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal('modalMachine')">Cancelar</button>
+      <button class="btn-save" onclick="saveMachine()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modalItem">
+  <div class="modal">
+    <div class="modal-title" id="modalItemTitle">Novo Item</div>
+    <input type="hidden" id="itemEditId">
+    <div class="modal-field"><label>Nome do Item</label><input type="text" id="itemEditName" placeholder="Ex: Clivador"></div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal('modalItem')">Cancelar</button>
+      <button class="btn-save" onclick="saveItem()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modalDetail">
+  <div class="modal">
+    <div class="modal-title" id="modalDetailTitle">Detalhes</div>
+    <div id="modalDetailBody"></div>
+    <div style="margin-top:14px"><button class="btn-cancel" style="width:100%" onclick="closeModal('modalDetail')">Fechar</button></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- INPUT CÂMERA (oculto) -->
+<input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none">
+
+<script>
+// ═══════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════
+const S = {
+  isAdmin: false, tech: null,
+  machines: [], templates: [], currentTemplate: null,
+  currentMachine: null, checklistItems: [],
+  responses: {},  // { item_id: { status, photo } }
+  adminItems: [], currentView: 'viewLogin',
+  pendingPhotoItemId: null,
+};
+
+// ═══════════════════════════════════════════════
+// API
+// ═══════════════════════════════════════════════
+async function api(method, url, body) {
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  if (body !== undefined) opts.body = JSON.stringify(body);
+  const res = await fetch(url, opts);
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw data;
+  return data;
+}
+
+// ═══════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════
+function toast(msg, dur=2500) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), dur);
+}
+function fmtCPF(v) { const d=v.replace(/\D/g,''); return d.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/,'$1.$2.$3-$4'); }
+function cleanCPF(v) { return v.replace(/\D/g,''); }
+function initials(n) { return (n||'?').split(' ').filter(Boolean).slice(0,2).map(x=>x[0]).join('').toUpperCase(); }
+function fmtDate(s) { return new Date(s).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}); }
+function monthName(m) { return ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'][m-1]; }
+function getWeekInfo() {
+  const d=new Date();
+  const u=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));
+  const dn=u.getUTCDay()||7; u.setUTCDate(u.getUTCDate()+4-dn);
+  const ys=new Date(Date.UTC(u.getUTCFullYear(),0,1));
+  return { week:Math.ceil((((u-ys)/86400000)+1)/7), year:u.getUTCFullYear() };
+}
+
+function showView(id, title, sub, showBack) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  S.currentView = id;
+  document.getElementById('topbarTitle').textContent = title || 'Connect Já';
+  document.getElementById('topbarSub').textContent = sub || 'Checklist de Máquinas';
+  document.getElementById('topbarBack').classList.toggle('visible', !!showBack);
+  const showNav = ['viewMachines','viewHistory','viewAdmin'].includes(id);
+  document.getElementById('bottomNav').style.display = showNav ? 'flex' : 'none';
+  document.getElementById('topbarAdminBtn').style.display = (S.isAdmin && id !== 'viewAdmin') ? 'flex' : 'none';
+  document.getElementById('nav-machines').classList.toggle('active', id === 'viewMachines');
+  document.getElementById('nav-history').classList.toggle('active', id === 'viewHistory');
+}
+
+function goBack() { navTo('machines'); }
+
+function navTo(section) {
+  if (section === 'machines') { loadMachines(); showView('viewMachines','Máquinas','Connect Já Telecom'); }
+  else if (section === 'history') { loadHistory(); showView('viewHistory','Histórico','Connect Já Telecom'); }
+  else if (section === 'admin') { loadAdminData(); showView('viewAdmin','Painel Admin','Connect Já Telecom',true); }
+}
+
+// ═══════════════════════════════════════════════
+// LOGIN
+// ═══════════════════════════════════════════════
+document.getElementById('cpfInput').addEventListener('input', function() {
+  const d = this.value.replace(/\D/g,'');
+  if (d.length<=3) this.value=d;
+  else if (d.length<=6) this.value=d.slice(0,3)+'.'+d.slice(3);
+  else if (d.length<=9) this.value=d.slice(0,3)+'.'+d.slice(3,6)+'.'+d.slice(6);
+  else this.value=d.slice(0,3)+'.'+d.slice(3,6)+'.'+d.slice(6,9)+'-'+d.slice(9,11);
+});
+document.getElementById('cpfInput').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+document.getElementById('techEditCpf').addEventListener('input', function() {
+  const d = this.value.replace(/\D/g,'');
+  if (d.length<=3) this.value=d;
+  else if (d.length<=6) this.value=d.slice(0,3)+'.'+d.slice(3);
+  else if (d.length<=9) this.value=d.slice(0,3)+'.'+d.slice(3,6)+'.'+d.slice(6);
+  else this.value=d.slice(0,3)+'.'+d.slice(3,6)+'.'+d.slice(6,9)+'-'+d.slice(9,11);
+});
+
+async function doLogin() {
+  const cpf = cleanCPF(document.getElementById('cpfInput').value);
+  if (cpf.length !== 11) { toast('CPF inválido'); return; }
+  const btn = document.getElementById('btnLogin');
+  btn.disabled = true; btn.textContent = 'Verificando...';
+  try {
+    const data = await api('POST', '/api/auth/cpf', { cpf });
+    S.tech = data.technician; S.isAdmin = false;
+    afterLogin();
+  } catch(e) { toast(e.error || 'CPF não encontrado'); }
+  finally { btn.disabled=false; btn.textContent='Entrar'; }
+}
+
+function afterLogin() {
+  document.getElementById('techAvatar').textContent = initials(S.tech?.name || 'Admin');
+  document.getElementById('techNameDisplay').textContent = S.tech?.name || 'Administrador';
+  document.getElementById('techRoleDisplay').textContent = S.isAdmin
+    ? 'Administrador'
+    : `${S.tech?.role||''} · ${S.tech?.level||''}`;
+  document.getElementById('cpfInput').value = '';
+  loadMachines();
+  showView('viewMachines','Máquinas','Connect Já Telecom');
+  if (S.isAdmin) document.getElementById('topbarAdminBtn').style.display = 'flex';
+}
+
+async function doLogout() {
+  await api('POST','/api/auth/logout').catch(()=>{});
+  S.tech = null; S.isAdmin = false;
+  document.getElementById('bottomNav').style.display = 'none';
+  document.getElementById('topbarAdminBtn').style.display = 'none';
+  showView('viewLogin','Connect Já','Checklist de Máquinas');
+}
+
+function openAdminLoginModal() {
+  document.getElementById('adminPwd').value = '';
+  document.getElementById('modalAdminLogin').classList.add('open');
+  setTimeout(() => document.getElementById('adminPwd').focus(), 200);
+}
+
+async function doAdminLogin() {
+  try {
+    await api('POST','/api/auth/admin',{ password: document.getElementById('adminPwd').value });
+    S.isAdmin = true; S.tech = { name:'Administrador', role:'Admin', level:'' };
+    closeModal('modalAdminLogin');
+    afterLogin();
+  } catch { toast('Senha incorreta'); }
+}
+
+// ═══════════════════════════════════════════════
+// MÁQUINAS
+// ═══════════════════════════════════════════════
+async function loadMachines() {
+  const container = document.getElementById('machineList');
+  container.innerHTML = `<div class="loading"><div class="spinner"></div>Carregando...</div>`;
+
+  const { week, year } = getWeekInfo();
+  const hoje = new Date();
+  document.getElementById('weekBadge').textContent = hoje.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'});
+  document.getElementById('periodLabel').textContent =
+    new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'});
+
+  try {
+    [S.machines, S.templates] = await Promise.all([
+      api('GET','/api/machines'),
+      api('GET','/api/templates')
+    ]);
+  } catch(e) {
+    container.innerHTML = `
+      <div class="error-state">
+        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+        <p>Erro ao conectar com o servidor.<br>Verifique a conexão e tente novamente.</p>
+        <button class="btn-retry" onclick="loadMachines()">Tentar novamente</button>
+      </div>`;
+    return;
+  }
+
+  S.currentTemplate = S.templates[0] || null;
+
+  if (!S.machines.length) {
+    container.innerHTML = `<div class="empty"><svg viewBox="0 0 24 24"><path d="M2 17h2v.5H3v1h1v.5H2v1h3v-4H2v1zm1-9h1V4H2v1h1v3zm-1 3h1.8L2 13.1v.9h3v-1H3.2L5 10.9V10H2v1zm5-6v2h14V5H7zm0 14h14v-2H7v2zm0-6h14v-2H7v2z"/></svg><p>Nenhuma máquina cadastrada</p></div>`;
+    return;
+  }
+
+  let statuses = S.machines.map(() => null);
+  if (S.currentTemplate) {
+    try {
+      statuses = await Promise.all(
+        S.machines.map(m =>
+          api('GET',`/api/checklist/status?template_id=${S.currentTemplate.id}&machine_id=${m.id}`)
+            .catch(() => null)
+        )
+      );
+    } catch {}
+  }
+
+  container.innerHTML = '';
+  S.machines.forEach((m, i) => {
+    const st = statuses[i];
+    let statusHtml = '';
+    if (st) {
+      const naoCount = (st.responses||[]).filter(r=>r.status==='nao').length;
+      statusHtml = naoCount > 0
+        ? `<span class="status-nao">✗ ${naoCount} problema(s)</span>`
+        : `<span class="status-ok">✓ Tudo OK</span>`;
+    } else {
+      statusHtml = `<span class="status-pending">Pendente este período</span>`;
+    }
+    const card = document.createElement('div');
+    card.className = 'machine-card';
+    card.innerHTML = `
+      <div class="machine-icon"><svg viewBox="0 0 24 24"><path d="M2 17h2v.5H3v1h1v.5H2v1h3v-4H2v1zm1-9h1V4H2v1h1v3zm-1 3h1.8L2 13.1v.9h3v-1H3.2L5 10.9V10H2v1zm5-6v2h14V5H7zm0 14h14v-2H7v2zm0-6h14v-2H7v2z"/></svg></div>
+      <div class="machine-info">
+        <div class="machine-name">${m.name}</div>
+        <div class="machine-status">${statusHtml}</div>
+      </div>
+      <span class="machine-arrow">›</span>`;
+    card.onclick = () => openChecklist(m, st);
+    container.appendChild(card);
+  });
+}
+
+// ═══════════════════════════════════════════════
+// CHECKLIST + FOTOS
+// ═══════════════════════════════════════════════
+async function openChecklist(machine, existingRun) {
+  S.currentMachine = machine; S.responses = {};
+  if (existingRun) {
+    renderResult(existingRun, machine);
+    showView('viewResult', machine.name, 'Resultado', true);
+    return;
+  }
+  if (!S.currentTemplate) {
+    toast('Nenhum template configurado. Verifique o painel admin.');
+    return;
+  }
+  try {
+    S.checklistItems = await api('GET',`/api/templates/${S.currentTemplate.id}/items`);
+  } catch(e) {
+    toast('Erro ao carregar itens: ' + (e.error || 'sem conexão com servidor'));
+    return;
+  }
+  if (!S.checklistItems.length) {
+    toast('Este template não tem itens cadastrados. Adicione itens no painel admin.');
+    return;
+  }
+  document.getElementById('checklistMachineName').textContent = machine.name;
+  renderChecklistItems();
+  updateProgress();
+  showView('viewChecklist', machine.name, `Checklist · ${S.currentTemplate.frequency==='daily'?'Diário':'Semanal'}`, true);
+}
+
+function renderChecklistItems() {
+  const container = document.getElementById('itemList');
+  container.innerHTML = '';
+  S.checklistItems.forEach((item, idx) => {
+    const div = document.createElement('div');
+    div.className = 'item-card';
+    div.id = `item-${item.id}`;
+    div.innerHTML = `
+      <div class="item-card-top">
+        <div class="item-num">${idx+1}</div>
+        <div class="item-name">${item.name}</div>
+        <div class="item-btns">
+          <button class="btn-ok" id="ok-${item.id}" onclick="mark(${item.id},'ok')">✓</button>
+          <button class="btn-nao" id="nao-${item.id}" onclick="mark(${item.id},'nao')">✗</button>
+        </div>
+      </div>
+      <div class="item-photo-section" id="photo-section-${item.id}">
+        <button class="btn-camera" onclick="triggerCamera(${item.id})">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 15.2c-1.77 0-3.2-1.43-3.2-3.2s1.43-3.2 3.2-3.2 3.2 1.43 3.2 3.2-1.43 3.2-3.2 3.2zM9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>
+          Tirar / Anexar foto
+        </button>
+        <div id="photo-preview-${item.id}"></div>
+      </div>`;
+    container.appendChild(div);
+  });
+}
+
+function mark(itemId, status) {
+  if (!S.responses[itemId]) S.responses[itemId] = {};
+  S.responses[itemId].status = status;
+  const card = document.getElementById(`item-${itemId}`);
+  card.classList.toggle('marked-ok', status==='ok');
+  card.classList.toggle('marked-nao', status==='nao');
+  document.getElementById(`ok-${itemId}`).classList.toggle('active', status==='ok');
+  document.getElementById(`nao-${itemId}`).classList.toggle('active', status==='nao');
+  // Admin não pode submeter checklist — só visualizar
+  if (S.isAdmin && !existingRun) {
+    toast('Admin não realiza checklists. Use o CPF de um técnico.');
+    return;
+  }
+  // Foto apenas para itens com problema (economiza espaço no banco)
+  if (status === 'nao') {
+    document.getElementById(`photo-section-${itemId}`).classList.add('visible');
+  } else {
+    document.getElementById(`photo-section-${itemId}`).classList.remove('visible');
+    if (S.responses[itemId]) delete S.responses[itemId].photo;
+    const pp = document.getElementById(`photo-preview-${itemId}`);
+    if (pp) pp.innerHTML = '';
+  }
+  updateProgress();
+  updateNaoPanel();
+}
+
+// CÂMERA
+// ── CLOUDINARY ──────────────────────────────────────────────────────────────
+const CLOUDINARY_CLOUD = 'dtyvrpoue';
+const CLOUDINARY_PRESET = 'checklist_fotos';
+
+function triggerCamera(itemId) {
+  S.pendingPhotoItemId = itemId;
+  document.getElementById('cameraInput').value = '';
+  document.getElementById('cameraInput').click();
+}
+
+document.getElementById('cameraInput').addEventListener('change', function() {
+  const file = this.files[0];
+  if (!file || !S.pendingPhotoItemId) return;
+  const itemId = S.pendingPhotoItemId;
+  document.getElementById(`photo-preview-${itemId}`).innerHTML =
+    `<div style="padding:10px;font-size:12px;color:var(--gray);display:flex;align-items:center;gap:8px"><div class="spinner" style="width:18px;height:18px;margin:0"></div>Enviando foto...</div>`;
+  uploadToCloudinary(file, itemId);
+});
+
+async function uploadToCloudinary(file, itemId) {
+  try {
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('upload_preset', CLOUDINARY_PRESET);
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, {
+      method: 'POST', body: fd
+    });
+    if (!res.ok) throw new Error('Falha no upload');
+    const data = await res.json();
+    const url = data.secure_url;
+    if (!S.responses[itemId]) S.responses[itemId] = {};
+    S.responses[itemId].photo = url;
+    renderPhotoPreview(itemId, url);
+    toast('✓ Foto enviada para a nuvem!');
+  } catch(e) {
+    document.getElementById(`photo-preview-${itemId}`).innerHTML = '';
+    toast('Erro ao enviar foto. Tente novamente.');
+  }
+}
+
+function renderPhotoPreview(itemId, src) {
+  const container = document.getElementById(`photo-preview-${itemId}`);
+  container.innerHTML = `
+    <div class="photo-preview-wrap">
+      <img class="photo-preview" src="${src}" onclick="openPhotoViewer('${src}')" alt="Foto do item">
+      <button class="btn-remove-photo" onclick="removePhoto(${itemId})">✕</button>
+    </div>`;
+}
+
+function removePhoto(itemId) {
+  if (S.responses[itemId]) delete S.responses[itemId].photo;
+  document.getElementById(`photo-preview-${itemId}`).innerHTML = '';
+}
+
+function updateProgress() {
+  const total = S.checklistItems.length;
+  const done = Object.keys(S.responses).filter(k => S.responses[k].status).length;
+  const pct = total > 0 ? Math.round(done/total*100) : 0;
+  document.getElementById('progressFill').style.width = pct+'%';
+  document.getElementById('progressText').textContent = `${done} / ${total} itens`;
+  document.getElementById('progressPct').textContent = pct+'%';
+  document.getElementById('btnSubmit').disabled = done < total;
+}
+
+function updateNaoPanel() {
+  const naoItems = S.checklistItems.filter(i => S.responses[i.id]?.status === 'nao');
+  const panel = document.getElementById('naoPanel');
+  if (naoItems.length > 0) {
+    panel.classList.add('visible');
+    document.getElementById('naoTags').innerHTML = naoItems.map(i=>`<span class="nao-tag">✗ ${i.name}</span>`).join('');
+  } else { panel.classList.remove('visible'); }
+}
+
+async function submitChecklist() {
+  if (S.isAdmin) { toast('Admin não pode salvar checklists.'); return; }
+  if (!S.tech?.id) { toast('Sessão expirada. Faça login novamente.'); return; }
+  const btn = document.getElementById('btnSubmit');
+  btn.disabled = true; btn.textContent = 'Salvando...';
+  const responses = S.checklistItems.map(i => ({
+    item_id: i.id,
+    status: S.responses[i.id]?.status,
+    photo: S.responses[i.id]?.photo || null
+  }));
+  try {
+    await api('POST','/api/checklist/submit',{
+      template_id: S.currentTemplate.id,
+      machine_id: S.currentMachine.id,
+      responses
+    });
+    toast('✓ Checklist salvo!');
+    setTimeout(() => navTo('machines'), 800);
+  } catch(e) {
+    toast(e.error||'Erro ao salvar');
+    btn.disabled=false; btn.textContent='Salvar Checklist';
+  }
+}
+
+// ═══════════════════════════════════════════════
+// RESULTADO
+// ═══════════════════════════════════════════════
+function renderResult(run, machine) {
+  const naoItems = (run.responses||[]).filter(r=>r.status==='nao');
+  const okItems  = (run.responses||[]).filter(r=>r.status==='ok');
+  const dateStr  = fmtDate(run.created_at);
+  let html = `
+    <div class="result-header-card">
+      <div class="result-machine">${machine.name}</div>
+      <div class="result-meta">Técnico: ${run.technician_name} · ${dateStr}</div>
+      <div class="result-counts">
+        <div class="result-count-ok"><span class="count-num">${okItems.length}</span><span class="count-label">✓ OK</span></div>
+        <div class="result-count-nao"><span class="count-num">${naoItems.length}</span><span class="count-label">✗ Problemas</span></div>
+      </div>
+    </div>`;
+  if (naoItems.length) {
+    html += `<div class="result-section-title">⚠ Itens com problema</div>`;
+    naoItems.forEach(r => {
+      html += `<div class="result-item-row">
+        <div class="result-item-top"><span>${r.item_name}</span><span class="badge-nao">✗ Não OK</span></div>
+        ${r.photo ? `<img class="result-item-photo" src="${r.photo}" onclick="openPhotoViewer('${r.photo}')" alt="Foto">` : ''}
+      </div>`;
+    });
+  }
+  if (okItems.length) {
+    html += `<div class="result-section-title">Itens verificados</div>`;
+    okItems.forEach(r => {
+      html += `<div class="result-item-row">
+        <div class="result-item-top"><span>${r.item_name}</span><span class="badge-ok">✓ OK</span></div>
+        ${r.photo ? `<img class="result-item-photo" src="${r.photo}" onclick="openPhotoViewer('${r.photo}')" alt="Foto">` : ''}
+      </div>`;
+    });
+  }
+  html += `<button class="btn-redo" onclick="refazer()">Refazer checklist deste período</button>`;
+  document.getElementById('resultWrap').innerHTML = html;
+}
+
+async function refazer() {
+  S.responses = {};
+  if (!S.currentTemplate || !S.currentMachine) return;
+  try { S.checklistItems = await api('GET',`/api/templates/${S.currentTemplate.id}/items`); } catch { return; }
+  document.getElementById('checklistMachineName').textContent = S.currentMachine.name;
+  renderChecklistItems(); updateProgress();
+  showView('viewChecklist', S.currentMachine.name, 'Checklist', true);
+}
+
+// ═══════════════════════════════════════════════
+// HISTÓRICO
+// ═══════════════════════════════════════════════
+async function loadHistory() {
+  document.getElementById('historyList').innerHTML = `<div class="loading"><div class="spinner"></div>Carregando...</div>`;
+  try {
+    const rows = await api('GET','/api/history?limit=100');
+    const container = document.getElementById('historyList');
+    if (!rows.length) {
+      container.innerHTML = `<div class="empty"><svg viewBox="0 0 24 24"><path d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42A8.954 8.954 0 0 0 13 21a9 9 0 0 0 0-18zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg><p>Nenhum registro ainda</p></div>`;
+      return;
+    }
+    container.innerHTML = rows.map(r => {
+      const hasNao = parseInt(r.nao_count) > 0;
+      return `<div class="hist-card" onclick="showRunDetail(${r.id},'${r.machine_name.replace(/'/g,"\\'")}','${r.technician_name.replace(/'/g,"\\'")}','${fmtDate(r.created_at)}')">
+        <div class="hist-top">
+          <span class="hist-machine">${r.machine_name}</span>
+          <span class="hist-date">${fmtDate(r.created_at)}</span>
+        </div>
+        <div class="hist-tech">👤 ${r.technician_name} · ${r.role||''}</div>
+        <div class="hist-counts">
+          <span class="hist-ok">✓ ${r.ok_count}</span>
+          ${hasNao ? `<span class="hist-nao">✗ ${r.nao_count}</span>` : `<span class="hist-allok">Tudo OK</span>`}
+        </div>
+      </div>`;
+    }).join('');
+  } catch {
+    document.getElementById('historyList').innerHTML = `<div class="empty"><p>Erro ao carregar histórico</p></div>`;
+  }
+}
+
+async function showRunDetail(runId, machine, tech, date) {
+  const items = await api('GET',`/api/history/${runId}`).catch(()=>[]);
+  document.getElementById('modalDetailTitle').textContent = machine;
+  document.getElementById('modalDetailBody').innerHTML = `
+    <div style="font-size:12px;color:var(--gray);margin-bottom:12px">👤 ${tech} · ${date}</div>
+    ${items.map(i => `
+      <div class="result-item-row">
+        <div class="result-item-top">
+          <span>${i.item_name}</span>
+          <span class="${i.status==='ok'?'badge-ok':'badge-nao'}">${i.status==='ok'?'✓ OK':'✗ Não OK'}</span>
+        </div>
+        ${i.photo ? `<img class="result-item-photo" src="${i.photo}" onclick="openPhotoViewer('${i.photo}')" style="cursor:pointer" alt="Foto">` : ''}
+      </div>`).join('')}`;
+  document.getElementById('modalDetail').classList.add('open');
+}
+
+// ═══════════════════════════════════════════════
+// PHOTO VIEWER
+// ═══════════════════════════════════════════════
+function openPhotoViewer(src) {
+  document.getElementById('photoViewerImg').src = src;
+  document.getElementById('photoViewer').classList.add('open');
+}
+function closePhotoViewer() { document.getElementById('photoViewer').classList.remove('open'); }
+
+// ═══════════════════════════════════════════════
+// ADMIN
+// ═══════════════════════════════════════════════
+async function loadAdminData() {
+  await Promise.all([loadAdminTechs(), loadAdminMachinesAdmin(), loadAdminTemplates()]);
+}
+
+function adminTab(tab) {
+  document.querySelectorAll('.admin-tab').forEach((t,i) =>
+    t.classList.toggle('active', ['techs','machines','items','report'][i] === tab)
+  );
+  document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
+  const map = {techs:'adminTechs',machines:'adminMachines',items:'adminItems',report:'adminReport'};
+  document.getElementById(map[tab]).classList.add('active');
+  if (tab === 'report') populateReportForm();
+}
+
+// TÉCNICOS
+async function loadAdminTechs() {
+  try {
+    const techs = await api('GET','/api/technicians');
+    document.getElementById('techsList').innerHTML = techs.map(t => `
+      <div class="admin-list-item">
+        <div class="tech-avatar" style="width:36px;height:36px;font-size:13px">${initials(t.name)}</div>
+        <div class="admin-list-info">
+          <div class="admin-list-name">${t.name}</div>
+          <div class="admin-list-sub">${t.role} · ${t.level} · ${fmtCPF(t.cpf)}</div>
+        </div>
+        <button class="btn-icon" onclick='openTechModal(${JSON.stringify(t)})'>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+        </button>
+        <button class="btn-icon danger" onclick="deleteTech(${t.id})">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+        </button>
+      </div>`).join('');
+  } catch {}
+}
+
+function openTechModal(t) {
+  document.getElementById('modalTechTitle').textContent = t ? 'Editar Técnico' : 'Novo Técnico';
+  document.getElementById('techEditId').value = t?.id || '';
+  document.getElementById('techEditName').value = t?.name || '';
+  document.getElementById('techEditCpf').value = t ? fmtCPF(t.cpf) : '';
+  document.getElementById('techEditMatricula').value = t?.matricula || '';
+  document.getElementById('techEditRg').value = t?.rg || '';
+  document.getElementById('techEditSexo').value = t?.sexo || '';
+  document.getElementById('techEditNascimento').value = t?.nascimento ? t.nascimento.slice(0,10) : '';
+  document.getElementById('techEditRole').value = t?.role || 'Técnico';
+  document.getElementById('techEditLevel').value = t?.level || 'Júnior';
+  document.getElementById('techEditSetor').value = t?.setor || '';
+  document.getElementById('techEditUnidade').value = t?.unidade || '';
+  document.getElementById('techEditAdmissao').value = t?.admissao ? t.admissao.slice(0,10) : '';
+  document.getElementById('techEditDemissao').value = t?.demissao ? t.demissao.slice(0,10) : '';
+  document.getElementById('modalTech').classList.add('open');
+}
+
+async function saveTech() {
+  const id = document.getElementById('techEditId').value;
+  const body = {
+    name: document.getElementById('techEditName').value.trim(),
+    cpf: document.getElementById('techEditCpf').value,
+    role: document.getElementById('techEditRole').value.trim() || 'Técnico',
+    level: document.getElementById('techEditLevel').value,
+    active: true
+  };
+  try {
+    if (id) await api('PUT',`/api/technicians/${id}`,body);
+    else await api('POST','/api/technicians',body);
+    closeModal('modalTech'); loadAdminTechs(); toast('✓ Técnico salvo!');
+  } catch(e) { toast(e.error||'Erro ao salvar'); }
+}
+
+async function deleteTech(id) {
+  if (!confirm('Desativar este técnico?')) return;
+  await api('DELETE',`/api/technicians/${id}`); loadAdminTechs(); toast('Técnico desativado');
+}
+
+// MÁQUINAS
+async function loadAdminMachinesAdmin() {
+  try {
+    const machines = await api('GET','/api/machines');
+    document.getElementById('machinesAdminList').innerHTML = machines.map(m => `
+      <div class="admin-list-item">
+        <div class="machine-icon" style="width:36px;height:36px">
+          <svg viewBox="0 0 24 24" fill="currentColor" style="width:18px;height:18px"><path d="M2 17h2v.5H3v1h1v.5H2v1h3v-4H2v1zm1-9h1V4H2v1h1v3zm-1 3h1.8L2 13.1v.9h3v-1H3.2L5 10.9V10H2v1zm5-6v2h14V5H7zm0 14h14v-2H7v2zm0-6h14v-2H7v2z"/></svg>
+        </div>
+        <div class="admin-list-info"><div class="admin-list-name">${m.name}</div></div>
+        <button class="btn-icon" onclick='openMachineModal(${JSON.stringify(m)})'>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+        </button>
+        <button class="btn-icon danger" onclick="deleteMachine(${m.id})">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+        </button>
+      </div>`).join('');
+  } catch {}
+}
+
+function openMachineModal(m) {
+  document.getElementById('modalMachineTitle').textContent = m ? 'Editar Máquina' : 'Nova Máquina';
+  document.getElementById('machineEditId').value = m?.id || '';
+  document.getElementById('machineEditName').value = m?.name || '';
+  document.getElementById('modalMachine').classList.add('open');
+}
+
+async function saveMachine() {
+  const id = document.getElementById('machineEditId').value;
+  const name = document.getElementById('machineEditName').value.trim();
+  if (!name) { toast('Nome obrigatório'); return; }
+  try {
+    if (id) await api('PUT',`/api/machines/${id}`,{name,active:true});
+    else await api('POST','/api/machines',{name});
+    closeModal('modalMachine'); loadAdminMachinesAdmin(); loadMachines(); toast('✓ Máquina salva!');
+  } catch(e) { toast(e.error||'Erro'); }
+}
+
+async function deleteMachine(id) {
+  if (!confirm('Desativar esta máquina?')) return;
+  await api('DELETE',`/api/machines/${id}`); loadAdminMachinesAdmin(); loadMachines(); toast('Desativada');
+}
+
+// ITENS
+async function loadAdminTemplates() {
+  try {
+    const templates = await api('GET','/api/templates');
+    const sel = document.getElementById('adminTemplateSelect');
+    sel.innerHTML = templates.map(t =>
+      `<option value="${t.id}">${t.name} (${t.frequency==='daily'?'Diário':'Semanal'})</option>`
+    ).join('');
+    if (templates.length) loadAdminItems();
+  } catch {}
+}
+
+async function loadAdminItems() {
+  const templateId = document.getElementById('adminTemplateSelect').value;
+  if (!templateId) return;
+  try {
+    S.adminItems = await api('GET',`/api/templates/${templateId}/items`);
+    document.getElementById('itemsAdminList').innerHTML = S.adminItems.map((item,idx) => `
+      <div class="admin-list-item">
+        <div class="item-num">${idx+1}</div>
+        <div class="admin-list-info"><div class="admin-list-name">${item.name}</div></div>
+        <button class="btn-icon" onclick='openItemModal(${JSON.stringify(item)})'>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+        </button>
+        <button class="btn-icon danger" onclick="deleteItem(${item.id})">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+        </button>
+      </div>`).join('');
+  } catch {}
+}
+
+function openItemModal(item) {
+  document.getElementById('modalItemTitle').textContent = item ? 'Editar Item' : 'Novo Item';
+  document.getElementById('itemEditId').value = item?.id || '';
+  document.getElementById('itemEditName').value = item?.name || '';
+  document.getElementById('modalItem').classList.add('open');
+}
+
+async function saveItem() {
+  const id = document.getElementById('itemEditId').value;
+  const name = document.getElementById('itemEditName').value.trim();
+  const templateId = document.getElementById('adminTemplateSelect').value;
+  if (!name) { toast('Nome obrigatório'); return; }
+  try {
+    if (id) await api('PUT',`/api/items/${id}`,{name,order_index:0});
+    else await api('POST',`/api/templates/${templateId}/items`,{name,order_index:S.adminItems.length});
+    closeModal('modalItem'); loadAdminItems(); toast('✓ Item salvo!');
+  } catch(e) { toast(e.error||'Erro'); }
+}
+
+async function deleteItem(id) {
+  if (!confirm('Excluir este item?')) return;
+  await api('DELETE',`/api/items/${id}`); loadAdminItems(); toast('Item excluído');
+}
+
+// ═══════════════════════════════════════════════
+// RELATÓRIO
+// ═══════════════════════════════════════════════
+async function populateReportForm() {
+  try {
+    const techs = await api('GET','/api/technicians');
+    document.getElementById('reportTech').innerHTML =
+      `<option value="">Selecione o técnico</option>` +
+      techs.map(t=>`<option value="${t.id}">${t.name}</option>`).join('');
+  } catch {}
+  const now = new Date();
+  document.getElementById('reportMonth').value = now.getMonth()+1;
+  const yearSel = document.getElementById('reportYear');
+  yearSel.innerHTML = '';
+  for (let y = now.getFullYear(); y >= now.getFullYear()-3; y--)
+    yearSel.innerHTML += `<option value="${y}">${y}</option>`;
+}
+
+async function generateReport() {
+  const techId = document.getElementById('reportTech').value;
+  const month  = document.getElementById('reportMonth').value;
+  const year   = document.getElementById('reportYear').value;
+  if (!techId) { toast('Selecione um técnico'); return; }
+  try {
+    const data = await api('GET',`/api/report?tech_id=${techId}&month=${month}&year=${year}`);
+    renderReportPreview(data);
+    buildPrintArea(data);
+    document.getElementById('btnPrint').classList.add('visible');
+  } catch(e) { toast(e.error||'Erro ao gerar relatório'); }
+}
+
+function renderReportPreview(data) {
+  const { technician:t, records, month, year } = data;
+  const container = document.getElementById('reportPreview');
+  if (!records.length) {
+    container.innerHTML = `<div class="empty"><p>Nenhum checklist em ${monthName(month)}/${year}</p></div>`;
+    return;
+  }
+  container.innerHTML = `
+    <div style="font-size:13px;font-weight:700;color:var(--gray);margin:16px 0 10px;text-transform:uppercase;letter-spacing:.05em">
+      ${records.length} registro(s) — ${monthName(month)}/${year}
+    </div>` +
+    records.map(r => `
+      <div class="hist-card" style="cursor:default">
+        <div class="hist-top">
+          <span class="hist-machine">${r.machine_name}</span>
+          <span class="hist-date">${fmtDate(r.created_at)}</span>
+        </div>
+        <div class="hist-counts">
+          <span class="hist-ok">✓ ${r.ok_count}</span>
+          ${parseInt(r.nao_count)>0 ? `<span class="hist-nao">✗ ${r.nao_count}</span>` : `<span class="hist-allok">Tudo OK</span>`}
+        </div>
+      </div>`).join('');
+}
+
+function buildPrintArea(data) {
+  const { technician:t, records, month, year } = data;
+  const today = new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'});
+  let html = `
+    <div class="pr-header">
+      <div>
+        <div class="pr-company">Connect Já Telecom</div>
+        <div class="pr-title">Relatório Mensal de Checklist</div>
+        <div class="pr-meta">${monthName(month)} / ${year} · Emitido em ${today}</div>
+      </div>
+    </div>
+    <div class="pr-tech-box">
+      <div class="pr-field"><strong>${t.name}</strong><br>Nome do Técnico</div>
+      <div class="pr-field"><strong>${t.role} · ${t.level}</strong><br>Cargo / Nível</div>
+      <div class="pr-field"><strong>${fmtCPF(t.cpf)}</strong><br>CPF</div>
+      <div class="pr-field"><strong>${records.length} registros</strong><br>Total do mês</div>
+    </div>`;
+  records.forEach(r => {
+    html += `
+      <div class="pr-record">
+        <div class="pr-record-header">
+          <span class="pr-record-machine">${r.machine_name}</span>
+          <span class="pr-record-date">${fmtDate(r.created_at)}</span>
+        </div>
+        <div class="pr-record-body">
+          ${(r.responses||[]).map(item => `
+            <div class="pr-row">
+              <div class="pr-row-top">
+                <span>${item.item_name}</span>
+                <span class="${item.status==='ok'?'pr-ok':'pr-nao'}">${item.status==='ok'?'✓ OK':'✗ Não OK'}</span>
+              </div>
+              ${item.photo ? `<img class="pr-photo" src="${item.photo}" alt="Foto ${item.item_name}">` : ''}
+            </div>`).join('')}
+        </div>
+        <div class="pr-summary">
+          <span>✓ ${r.ok_count} OK</span>
+          ${parseInt(r.nao_count)>0 ? `<span style="color:#dc2626">✗ ${r.nao_count} Não OK</span>` : '<span style="color:#16a34a">Tudo OK</span>'}
+        </div>
+      </div>`;
+  });
+  html += `
+    <div class="pr-footer">
+      <div class="pr-sign"><div class="pr-sign-line"></div>${t.name}<br>${t.role} · ${t.level}</div>
+      <div class="pr-sign"><div class="pr-sign-line"></div>Responsável / Supervisor</div>
+    </div>`;
+  document.getElementById('printArea').innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════
+// MODAIS
+// ═══════════════════════════════════════════════
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-bg').forEach(bg => {
+  bg.addEventListener('click', e => { if (e.target===bg) bg.classList.remove('open'); });
+});
